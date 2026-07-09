@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, "Microsoft YaHei", sans-serif;
+  background: #f0f2f5;
+}

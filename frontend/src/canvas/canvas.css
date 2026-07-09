@@ -1,0 +1,385 @@
+/* ================================================================
+   Association Canvas — Glassmorphism Node Graph Styles
+   ================================================================ */
+
+:root {
+  --cm-bg: #fefce8;
+  --cm-bg-glass: rgba(255, 255, 255, 0.55);
+  --cm-border: rgba(255, 255, 255, 0.6);
+  --cm-text: #1d1d1f;
+  --cm-text-sub: #6e6e73;
+  --cm-accent: #FFD600;
+  --cm-accent-hover: #e6c000;
+  --cm-connection: rgba(0, 0, 0, 0.13);
+  --cm-shadow: rgba(0, 0, 0, 0.10);
+  --cm-node-root-bg: #FFD600;
+  --cm-node-root-text: #1d1d1f;
+  --cm-overlay: rgba(0, 0, 0, 0.35);
+}
+
+[data-cm-theme="dark"] {
+  --cm-bg: #18181b;
+  --cm-bg-glass: rgba(39, 39, 42, 0.55);
+  --cm-border: rgba(255, 255, 255, 0.10);
+  --cm-text: #f4f4f5;
+  --cm-text-sub: #a1a1aa;
+  --cm-connection: rgba(255, 255, 255, 0.10);
+  --cm-shadow: rgba(0, 0, 0, 0.30);
+  --cm-node-root-bg: #FFD600;
+  --cm-node-root-text: #1d1d1f;
+  --cm-overlay: rgba(0, 0, 0, 0.55);
+}
+
+/* ---- Canvas Root ---- */
+.cm-canvas-root {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  cursor: grab;
+  background: var(--cm-bg);
+}
+.cm-canvas-root.panning {
+  cursor: grabbing;
+}
+
+/* ---- Transform Container ---- */
+.cm-transform {
+  position: absolute;
+  top: 0; left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+/* ---- SVG Connections Layer ---- */
+.cm-svg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 1px; height: 1px;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 1;
+}
+.cm-svg path {
+  fill: none;
+  stroke: var(--cm-connection);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* ---- Nodes Container ---- */
+.cm-nodes-layer {
+  position: absolute;
+  top: 0; left: 0;
+  z-index: 2;
+}
+
+/* ---- Generic Node ---- */
+.mind-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  min-width: 76px;
+  max-width: 160px;
+  padding: 10px 16px;
+  border-radius: 50px;
+  background: var(--cm-bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--cm-border);
+  box-shadow:
+    0 4px 24px var(--cm-shadow),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  z-index: 10;
+  text-align: center;
+  opacity: 0;
+  animation: cm-node-enter 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.mind-node:hover {
+  box-shadow:
+    0 8px 36px var(--cm-shadow),
+    0 0 0 2px var(--cm-accent);
+  z-index: 20;
+}
+.mind-node.dragging {
+  cursor: grabbing;
+  z-index: 100;
+  box-shadow:
+    0 12px 48px var(--cm-shadow),
+    0 0 0 3px var(--cm-accent);
+}
+.mind-node.selected {
+  box-shadow:
+    0 0 0 3px var(--cm-accent),
+    0 8px 32px var(--cm-shadow);
+}
+
+/* Root node variant */
+.mind-node.root {
+  background: var(--cm-node-root-bg);
+  color: var(--cm-node-root-text);
+  font-weight: 600;
+  border-color: var(--cm-accent);
+  min-width: 96px;
+  padding: 12px 20px;
+  font-size: 15px;
+}
+
+/* Child float animation */
+.mind-node.child {
+  animation: cm-node-enter 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+             cm-node-float 5s ease-in-out infinite;
+  animation-delay: 0s, var(--cm-float-delay, 0s);
+}
+
+/* ---- Node Enter: scale + fade ---- */
+@keyframes cm-node-enter {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.25);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* ---- Node Float: gentle bob ---- */
+@keyframes cm-node-float {
+  0%, 100% {
+    transform: translate(-50%, -50%) translateY(0);
+  }
+  50% {
+    transform: translate(-50%, -50%) translateY(-5px);
+  }
+}
+
+/* ---- Node Text ---- */
+.mind-node-zh {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cm-text);
+  line-height: 1.3;
+  word-break: break-all;
+}
+.mind-node.root .mind-node-zh {
+  color: var(--cm-node-root-text);
+  font-size: 15px;
+}
+.mind-node-en {
+  font-size: 10px;
+  color: var(--cm-text-sub);
+  margin-top: 2px;
+  opacity: 0.7;
+}
+.mind-node.root .mind-node-en {
+  color: rgba(29, 29, 31, 0.55);
+}
+
+/* ---- Badge (child count) ---- */
+.cm-badge {
+  position: absolute;
+  top: -6px; right: -6px;
+  min-width: 18px; height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--cm-accent);
+  color: var(--cm-node-root-text);
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+}
+
+/* ---- Plus Button ---- */
+.cm-plus-btn {
+  position: absolute;
+  bottom: -12px; left: 50%;
+  transform: translateX(-50%) scale(0);
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--cm-accent);
+  border: 2px solid var(--cm-bg);
+  color: var(--cm-node-root-text);
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 30;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.2s ease;
+  box-shadow: 0 2px 12px rgba(255, 214, 0, 0.4);
+  line-height: 1;
+  padding-bottom: 1px;
+}
+.mind-node.selected .cm-plus-btn {
+  transform: translateX(-50%) scale(1);
+}
+.cm-plus-btn:hover {
+  box-shadow: 0 4px 20px rgba(255, 214, 0, 0.6);
+  transform: translateX(-50%) scale(1.15);
+}
+
+/* ---- Collapse Toggle ---- */
+.cm-collapse-btn {
+  position: absolute;
+  top: -8px; left: 50%;
+  transform: translateX(-50%);
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--cm-bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--cm-border);
+  color: var(--cm-text-sub);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 30;
+  transition: transform 0.2s ease;
+  line-height: 1;
+}
+.cm-collapse-btn:hover {
+  transform: translateX(-50%) scale(1.2);
+}
+
+/* ---- Loading Spinner ---- */
+.cm-spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(29, 29, 31, 0.2);
+  border-top-color: var(--cm-node-root-text);
+  border-radius: 50%;
+  animation: cm-spin 0.6s linear infinite;
+}
+@keyframes cm-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---- Canvas Controls (bottom-left) ---- */
+.cm-controls {
+  position: absolute;
+  bottom: 16px; left: 16px;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--cm-bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--cm-border);
+  border-radius: 14px;
+  padding: 4px;
+  box-shadow: 0 4px 24px var(--cm-shadow);
+}
+.cm-ctrl-btn {
+  width: 34px; height: 34px;
+  border: none;
+  background: transparent;
+  color: var(--cm-text);
+  font-size: 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+.cm-ctrl-btn:hover {
+  background: var(--cm-border);
+}
+.cm-ctrl-sep {
+  height: 1px;
+  background: var(--cm-border);
+  margin: 2px 4px;
+}
+.cm-zoom-label {
+  font-size: 10px;
+  color: var(--cm-text-sub);
+  text-align: center;
+  padding: 2px 0;
+  font-weight: 600;
+  min-width: 34px;
+}
+
+/* ---- Top Bar (search input inside drawer) ---- */
+.cm-top-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--cm-bg-glass);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--cm-border);
+}
+.cm-top-bar input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--cm-text);
+  outline: none;
+  font-family: inherit;
+  min-width: 0;
+}
+.cm-top-bar input::placeholder {
+  color: var(--cm-text-sub);
+}
+.cm-top-bar-btn {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--cm-border);
+  background: var(--cm-bg-glass);
+  color: var(--cm-text);
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+.cm-top-bar-btn:hover {
+  background: var(--cm-accent);
+  color: var(--cm-node-root-text);
+}
+
+/* ---- Welcome State ---- */
+.cm-welcome {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0.4;
+}
+.cm-welcome-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+.cm-welcome-text {
+  font-size: 14px;
+  color: var(--cm-text-sub);
+}
+
+/* Hide built-in top bar (drawer provides its own input) */
+.cm-top-bar { display: none; }
+
+/* Drawer slide-in animation */
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}

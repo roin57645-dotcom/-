@@ -1,0 +1,20 @@
+{
+  "name": "dialogue-analysis",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-scripts": "5.0.1"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build"
+  },
+  "browserslist": { "production": [">0.2%"], "development": ["last 1 chrome version"] }
+}

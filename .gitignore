@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
+
+# Node
+node_modules/
+build/
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Storage (profiles are local data)
+backend/storage/profiles/
+backend/storage/*.json
+
+# API keys (keep template, ignore real keys)
+.env
+!.env.example

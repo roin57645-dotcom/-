@@ -187,4 +187,3 @@ dialogue-analysis/
 - 所有 API 密钥通过 `.env` 文件管理，`.gitignore` 已排除
 - 提交前请确认 `.env` 不在暂存区
 - 如需清理 git 历史中的旧密钥，建议去平台重置
-"# -" 
