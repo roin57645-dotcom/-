@@ -296,6 +296,7 @@ async def analyze(
     image_id: str,
     background_tasks: BackgroundTasks,
     name: str = Query("default_user"),
+    user_notes: str = Query("", description="用户的辅助判断与背景补充"),
 ):
     entry = IMAGE_STORE.get(image_id)
     if not entry:
@@ -304,6 +305,8 @@ async def analyze(
     profile = load_profile(name)
     self_profile = load_profile("me")
 
+    analysis_time = datetime.now().strftime("%Y年%m月%d日 %H:%M")
+
     async def event_generator():
         buffer = ""
         emitted_ids = set()
@@ -311,7 +314,7 @@ async def analyze(
         collected_blocks = []
 
         try:
-            async for chunk in stream_analyze(entry["data"], profile["persona_profile"], self_profile["persona_profile"], profile.get("history_sessions", [])[-30:]):
+            async for chunk in stream_analyze(entry["data"], profile["persona_profile"], self_profile["persona_profile"], profile.get("history_sessions", [])[-30:], analysis_time, user_notes):
                 buffer += chunk
 
                 for block in _parse_blocks(buffer):

@@ -19,6 +19,7 @@ export default function App() {
   const [expandedId, setExpandedId] = useState(null);
   const [humorReplies, setHumorReplies] = useState([]);
   const [humorLoading, setHumorLoading] = useState(false);
+  const [userNotes, setUserNotes] = useState("");
 
   // ===== Drag & Drop state =====
   const [isDragging, setIsDragging] = useState(false);
@@ -52,6 +53,24 @@ export default function App() {
       window.removeEventListener("dragover", prevent);
       window.removeEventListener("drop", prevent);
     };
+  }, []);
+
+  // ===== Clipboard paste: auto-upload image on Ctrl+V =====
+  useEffect(() => {
+    function handlePaste(e) {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type.startsWith("image/")) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          processFile(file);
+          return;
+        }
+      }
+    }
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
   }, []);
 
   async function handleDrawerSearch() {
@@ -185,7 +204,8 @@ export default function App() {
     setHumorReplies([]);
 
     const nameParam = encodeURIComponent(selectedName);
-    const es = new EventSource(`${API}/api/analyze/${imageId}?name=${nameParam}`);
+    const notesParam = encodeURIComponent(userNotes);
+    const es = new EventSource(`${API}/api/analyze/${imageId}?name=${nameParam}&user_notes=${notesParam}`);
     es.onmessage = (e) => {
       if (e.data === "[DONE]") {
         es.close();
@@ -359,6 +379,24 @@ export default function App() {
               scrollbar-thin pr-1">
               {activeProfile.persona_profile}
             </div>
+          </div>
+        )}
+
+        {/* User Notes — visible when image is uploaded */}
+        {selectedName && image && (
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-gray-500 tracking-wide">
+              📝 辅助判断（可选）
+            </label>
+            <textarea
+              value={userNotes}
+              onChange={(e) => setUserNotes(e.target.value)}
+              placeholder="补充背景、自我反思、疑问聚焦...&#10;例如：她最近刚失恋，情绪不稳定&#10;或：我不确定她最后那句是不是在试探我"
+              rows={3}
+              className="w-full px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg
+                placeholder-gray-400 text-gray-700 resize-none
+                focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 transition"
+            />
           </div>
         )}
 
