@@ -12,11 +12,15 @@ from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
-load_dotenv(Path(__file__).parent.parent / ".env")
+
+if getattr(sys, 'frozen', False):
+    load_dotenv(Path(sys._MEIPASS) / ".env")
+else:
+    load_dotenv(Path(__file__).parent.parent / ".env")
 
 from fastapi import BackgroundTasks, FastAPI, UploadFile, File, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -371,15 +375,28 @@ async def associate(req: AssociateRequest):
         raise HTTPException(500, f"联想接口出错: {str(e)}")
 
 
-# Static file hosting for packaged Electron builds only
+# Static file hosting for packaged builds only
 # Must be after all API routes so /api/* requests are not intercepted
 if getattr(sys, 'frozen', False):
     _BUILD_DIR = Path(sys._MEIPASS) / "frontend" / "build"
+
+    @app.get("/", response_class=HTMLResponse)
+    async def serve_index():
+        index_path = _BUILD_DIR / "index.html"
+        html = index_path.read_text(encoding="utf-8")
+        inject = '<script>window.__API_BASE__ = "";</script>'
+        html = html.replace("<head>", f"<head>{inject}", 1)
+        return HTMLResponse(content=html)
+
+    # Mount static files AFTER the root route so /api/* still works
     if _BUILD_DIR.exists():
-        app.mount("/", StaticFiles(directory=str(_BUILD_DIR), html=True), name="static")
+        _STATIC_DIR = str(_BUILD_DIR / "static")
+        app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static-assets")
 
 
 if __name__ == "__main__":
+    import webbrowser
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--storage-path", default=None, help="自定义数据存储根目录")
     parser.add_argument("--port", type=int, default=0, help="指定端口号（0=动态分配）")
@@ -387,24 +404,31 @@ if __name__ == "__main__":
 
     if args.storage_path:
         root = Path(args.storage_path)
-        STORAGE_ROOT = root
-        PROFILES_DIR = root / "profiles"
-        LEDGER_PATH = root / "global_ledger.json"
+    elif getattr(sys, 'frozen', False):
+        # Frozen exe: store data next to the exe, not in temp _MEIPASS
+        root = Path(sys.executable).parent / "storage"
+    else:
+        root = STORAGE_ROOT
+
+    STORAGE_ROOT = root
+    PROFILES_DIR = root / "profiles"
+    LEDGER_PATH = root / "global_ledger.json"
 
     _ensure_profiles_dir()
 
     if args.port:
         port = args.port
     else:
-        # 动态绑定空闲端口（避免与其他软件端口冲突）
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind(("", 0))
         port = sock.getsockname()[1]
         sock.close()
 
-    # Electron 父进程通过此暗号截获端口号
     print(f"[SYS_PORT]:{port}", flush=True)
     sys.stdout.flush()
+
+    # Auto-open browser
+    webbrowser.open(f"http://127.0.0.1:{port}")
 
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=port)

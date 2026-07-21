@@ -4,7 +4,7 @@ import StrategyBar from "./components/StrategyBar";
 import AssociationCanvas from "./canvas/AssociationCanvas";
 import "./canvas/canvas.css";
 
-const API = "http://localhost:8000";
+const API = window.__API_BASE__ ?? "http://localhost:8000";
 const IMAGE_WIDTH = 420;
 const COL_WIDTH = 300;
 const GAP = 40;
